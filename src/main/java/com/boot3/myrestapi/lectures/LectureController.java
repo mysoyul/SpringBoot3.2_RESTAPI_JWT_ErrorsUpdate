@@ -45,7 +45,9 @@ public class LectureController {
     @PutMapping("/{id}")
     public ResponseEntity updateLecture(@PathVariable Integer id,
                                         @RequestBody @Valid LectureReqDto lectureReqDto,
-                                        Errors errors) {
+                                        Errors errors,
+                                        @CurrentUser UserInfo currentUser) {
+
         String errMsg = String.format("Id = %d Lecture Not Found", id);
         Lecture existingLecture = lectureRepository.findById(id)
                 .orElseThrow(()-> new BusinessException(errMsg, HttpStatus.NOT_FOUND));
@@ -58,11 +60,19 @@ public class LectureController {
         if (errors.hasErrors()) {
             return getErrors(errors);
         }
+        //Lecture가 참조하는 UserInfo 객체와 인증한 UserInfo 객체가 다르면 401 인증 오류
+        if((existingLecture.getUserInfo() != null) && (!existingLecture.getUserInfo().equals(currentUser))) {
+            return new ResponseEntity(HttpStatus.UNAUTHORIZED);
+        }
 
         this.modelMapper.map(lectureReqDto, existingLecture);
         existingLecture.update();
         Lecture savedLecture = this.lectureRepository.save(existingLecture);
         LectureResDto lectureResDto = modelMapper.map(savedLecture, LectureResDto.class);
+
+        //Lecture 객체와 연관된 UserInfo 객체가 있다면 LectureResDto에 email을 set
+        if(savedLecture.getUserInfo() != null)
+            lectureResDto.setEmail(savedLecture.getUserInfo().getEmail());
 
         LectureResource lectureResource = new LectureResource(lectureResDto);
         return ResponseEntity.ok(lectureResource);
