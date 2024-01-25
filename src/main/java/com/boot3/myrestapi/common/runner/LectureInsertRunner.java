@@ -6,6 +6,7 @@ import com.boot3.myrestapi.lectures.LectureStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -13,13 +14,14 @@ import java.time.LocalDateTime;
 import java.util.stream.IntStream;
 
 @Component
-@Profile("prod")  // 실행환경이 test인 경우(application.properties의 spring.profiles.active=prod ) 에만 이 클래스를 수행한다.
-public class LectureInsertRunner implements ApplicationRunner {
+@Profile("test")  // 실행환경이 test인 경우(application.properties의 spring.profiles.active=prod ) 에만 이 클래스를 수행한다.
+public class LectureInsertRunner implements CommandLineRunner {
     @Autowired
     LectureRepository lectureRepository;
     @Override
-    public void run(ApplicationArguments args) throws Exception {
-        IntStream.rangeClosed(1, 5).forEach(this::generateLecture);
+    //public void run(ApplicationArguments args) throws Exception {
+    public void run(String... args) throws Exception {
+        IntStream.rangeClosed(1, 4).forEach(this::generateLecture);
     }
     private Lecture generateLecture(int index) {
         Lecture lecture = buildLecture(index);

@@ -1,6 +1,7 @@
 
 package com.boot3.myrestapi.lectures;
 
+import com.boot3.myrestapi.security.userinfo.entity.UserInfo;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
@@ -37,6 +38,9 @@ public class Lecture {
 
     @Enumerated(EnumType.STRING)
     private LectureStatus lectureStatus = LectureStatus.DRAFT;
+
+    @ManyToOne
+    private UserInfo userInfo;
 
     public void update() {
         // Update free
