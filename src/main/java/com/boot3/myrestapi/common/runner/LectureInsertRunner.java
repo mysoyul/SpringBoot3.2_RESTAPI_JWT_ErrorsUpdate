@@ -19,7 +19,7 @@ public class LectureInsertRunner implements ApplicationRunner {
     LectureRepository lectureRepository;
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        IntStream.range(1, 15).forEach(this::generateLecture);
+        IntStream.rangeClosed(1, 5).forEach(this::generateLecture);
     }
     private Lecture generateLecture(int index) {
         Lecture lecture = buildLecture(index);
