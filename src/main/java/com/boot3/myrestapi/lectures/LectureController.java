@@ -6,6 +6,8 @@ import com.boot3.myrestapi.lectures.dto.LectureReqDto;
 import com.boot3.myrestapi.lectures.dto.LectureResDto;
 import com.boot3.myrestapi.lectures.dto.LectureResource;
 import com.boot3.myrestapi.lectures.validator.LectureValidator;
+import com.boot3.myrestapi.security.userinfo.annot.CurrentUser;
+import com.boot3.myrestapi.security.userinfo.entity.UserInfo;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -35,6 +37,11 @@ public class LectureController {
     private final ModelMapper modelMapper;
     private final LectureValidator lectureValidator;
 
+    //constructor injection
+//    public LectureController(LectureRepository lectureRepository) {
+//        this.lectureRepository = lectureRepository;
+//    }
+
     @PutMapping("/{id}")
     public ResponseEntity updateLecture(@PathVariable Integer id,
                                         @RequestBody @Valid LectureReqDto lectureReqDto,
@@ -63,25 +70,43 @@ public class LectureController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<?> queryLectures(Pageable pageable, PagedResourcesAssembler<LectureResDto>assembler) {
+    public ResponseEntity<?> queryLectures(Pageable pageable,
+                                           PagedResourcesAssembler<LectureResDto>assembler,
+                                           @CurrentUser UserInfo currentUser) {
         System.out.println(pageable.getClass().getName());
         System.out.println(pageable);
         Page<Lecture> lecturePage = this.lectureRepository.findAll(pageable);
         // Page<Lecture> => Page<LectureResDto>
+//        Page<LectureResDto> lectureResDtoPage =
+//                lecturePage.map(lecture -> modelMapper.map(lecture, LectureResDto.class));
+        /*
+           Lecture 객체와 연관된 UserInfo 객체가 있다면 LectureResDto에 email을 set 한다.
+         */
         Page<LectureResDto> lectureResDtoPage =
-                lecturePage.map(lecture -> modelMapper.map(lecture, LectureResDto.class));
+                lecturePage.map(lecture -> {
+                    LectureResDto lectureResDto = new LectureResDto();
+                    if (lecture.getUserInfo() != null) {
+                        lectureResDto.setEmail(lecture.getUserInfo().getEmail());
+                    }
+                    modelMapper.map(lecture, lectureResDto);
+                    return lectureResDto;
+                });
+
         // Page<LectureResDto> => PagedModel<EntityModel<LectureResDto>>
         // PagedModel<EntityModel<LectureResDto>> pagedModel =
         //        assembler.toModel(lectureResDtoPage);
         PagedModel<LectureResource> pageModel =
                 // assembler.toModel(lectureResDtoPage, resDto -> new LectureResource(resDto));
                 assembler.toModel(lectureResDtoPage, LectureResource::new);
+        /*
+           토큰 인증을 했다면 create-Lecture 링크를 생성한다.
+         */
+        if (currentUser != null) {
+            pageModel.add(linkTo(LectureController.class).withRel("create-Lecture"));
+        }
         return ResponseEntity.ok(pageModel);
     }
-    //constructor injection
-//    public LectureController(LectureRepository lectureRepository) {
-//        this.lectureRepository = lectureRepository;
-//    }
+
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_USER')")
@@ -103,7 +128,9 @@ public class LectureController {
 
 
     @PostMapping
-    public ResponseEntity<?> createLecture(@RequestBody @Valid LectureReqDto lectureReqDto, Errors errors) {
+    public ResponseEntity<?> createLecture(@RequestBody @Valid LectureReqDto lectureReqDto,
+                                           Errors errors,
+                                           @CurrentUser UserInfo currentUser) {
         if(errors.hasErrors()) {
             return getErrors(errors);
         }
@@ -117,9 +144,15 @@ public class LectureController {
         Lecture lecture = modelMapper.map(lectureReqDto, Lecture.class);
         //free, offline 필드 초기화
         lecture.update();
+
+        //Lecture와 UserInfo 연관 관계 설정
+        lecture.setUserInfo(currentUser);
+
         Lecture addedLecture = lectureRepository.save(lecture);
         //Entity => ResDto
         LectureResDto lectureResDto = modelMapper.map(addedLecture, LectureResDto.class);
+        //LectureResDto 에 UserInfo 객체의 email set
+        lectureResDto.setEmail(addedLecture.getUserInfo().getEmail());
 
         WebMvcLinkBuilder selfLinkBuilder =
                 linkTo(LectureController.class).slash(addedLecture.getId());
