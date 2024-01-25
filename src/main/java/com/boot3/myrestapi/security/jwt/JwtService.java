@@ -24,7 +24,7 @@ public class JwtService {
     public static final String SECRET = "5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437";
     public static final SecretKey KEY = Keys.hmacShaKeyFor(SECRET.getBytes());
     private final static SecureDigestAlgorithm<SecretKey, SecretKey> ALGORITHM = Jwts.SIG.HS256;
-    public static final int ACCESS_EXPIRE = 3600;
+    public static final int ACCESS_EXPIRE = 3600; //second(초)
 
     private Claims extractAllClaims(String token) {
         return Jwts
