@@ -19,8 +19,10 @@ public class UserInfoUserDetails implements UserDetails {
     public UserInfoUserDetails(UserInfo userInfo) {
         email=userInfo.getEmail();
         password=userInfo.getPassword();
+        // ROLE_ADMIN,ROLE_USER
         authorities= Arrays.stream(userInfo.getRoles().split(","))
-                .map(SimpleGrantedAuthority::new)
+                //.map(SimpleGrantedAuthority::new)
+                .map(roleName -> new SimpleGrantedAuthority(roleName))
                 .collect(Collectors.toList());
     }
 
