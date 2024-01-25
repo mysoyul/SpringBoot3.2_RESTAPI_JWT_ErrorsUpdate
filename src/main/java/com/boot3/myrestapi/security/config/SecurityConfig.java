@@ -1,5 +1,7 @@
 package com.boot3.myrestapi.security.config;
 
+import com.boot3.myrestapi.security.exception.CustomAccessDeniedHandler;
+import com.boot3.myrestapi.security.exception.CustomAuthenticationEntryPoint;
 import com.boot3.myrestapi.security.filter.JwtAuthenticationFilter;
 import com.boot3.myrestapi.security.userinfo.service.UserInfoUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +21,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import static org.springframework.security.config.Customizer.withDefaults;
@@ -60,9 +64,24 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(authManager -> authManager
+                        .authenticationEntryPoint(authenticationEntryPoint())
+                        .accessDeniedHandler(accessDeniedHandler())
+                )
                 .build();
     }
 
+    @Bean
+    //401
+    public AuthenticationEntryPoint authenticationEntryPoint() {
+        return new CustomAuthenticationEntryPoint();
+    }
+
+    @Bean
+    //403
+    public AccessDeniedHandler accessDeniedHandler() {
+        return new CustomAccessDeniedHandler();
+    }
     @Bean
     public UserDetailsService userDetailsService() {
         return new UserInfoUserDetailsService();

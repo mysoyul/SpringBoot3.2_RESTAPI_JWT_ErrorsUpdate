@@ -27,7 +27,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         // Create response content
         JSONObject jsonObject = new JSONObject();
         try {
-            jsonObject.put("code", HttpServletResponse.SC_UNAUTHORIZED);
+            jsonObject.put("code", HttpServletResponse.SC_UNAUTHORIZED); //401
             jsonObject.put("message", "요청된 리소스에 대한 유효한 인증 자격 증명이 없습니다!");
         } catch (JSONException e) {
             throw new RuntimeException(e);
