@@ -1,5 +1,4 @@
 # Boot3-REST-JWT  
-[REST와JWT_202401.pdf](docs%2FREST%BF%CDJWT_202401.pdf)  
 
 [Setting Projects]  
 1. Spring Boot  
